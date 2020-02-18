@@ -1,0 +1,1 @@
+{"version":3,"sources":["style.scss"],"names":[],"mappings":"AAAA;EACE,sBAAsB,EAAA;;AAOxB;EAEI,yBAJO;EAKP,YAPK;EAQL,aAPK,EAAA","file":"style.css","sourcesContent":["* {\n  box-sizing: border-box;\n}\n\n$w: 970px;\n$h: 250px;\n$bg:#f4f5f7;\n\nbody {\n  .wrapper {\n    background-color: $bg;\n    width: $w;\n    height: $h;\n  }\n}"]}

@@ -12,7 +12,24 @@
 <body>
 
   <div class="wrapper">
-    <div class="cards-container" id="cardsContainer"> </div>
+    <div class="add-card">
+      <button>Add</button>
+    </div>
+
+    <div class="cards-container" id="cardsContainer"></div>
+
+    <div class="card-form-modal" id="cardFormModal">
+      <form class="card-form" id="cardForm">
+        <input type="text" class="card-form__number">
+        <input type="text" class="card-form__comment">
+        <img src="">
+        <div class="card-form__buttons">
+          <button type="button" class="close">Close</button>
+          <button type="submit">Save</button>
+        </div>
+        <div class="card-form__error"></div>
+      </form>
+    </div>
   </div>
 
   <script src="scripts/script.js"></script>

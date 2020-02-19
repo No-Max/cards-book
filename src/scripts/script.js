@@ -1,11 +1,16 @@
-import Card from './CardClass.js';
-import CardList from './CardListClass.js';
+import CardList from './classes/CardList.js';
+import CardForm from './classes/CardForm.js';
+import Modal from './classes/Modal.js';
+import Card from './classes/Card';
 
-const cardsContainer = document.getElementById('cardsContainer');
+const cardsContainerSelector = document.getElementById('cardsContainer');
+const cardFormSelector = document.getElementById('cardForm');
+const cardFormModalSelector = document.getElementById('cardFormModal');
 
-const card = new Card('22 22', 'lalal', 'images/970-250.jpg');
-const card2 = new Card('22 232', 'lalal', 'images/970-250.jpg');
-const cardList = new CardList(cardsContainer);
-cardList.add(card);
-cardList.add(card2);
-console.log(cardList)
+const cardFormModal = new Modal(cardFormModalSelector);
+
+const card = new Card({number: '4323 2314 3145 2155', comment: 'test', brandImageUrl: 'images/970-250.jpg'})
+
+const cardList = new CardList(cardsContainerSelector);
+//cardList.add(card);
+const cardForm = new CardForm(cardFormSelector);

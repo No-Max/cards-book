@@ -1,4 +1,4 @@
-import Card from './CardClass';
+import Card from './Card';
 
 const localStorageName = 'cards-list';
 
@@ -18,21 +18,25 @@ export default class {
         }
     };
     remove(cardId) {
-        this.cards = this.cards.filter(item => item.id == cardId);
+        console.log(cardId);
+        console.log(this.cards)
+        this.cards = this.cards.filter(item => item.id === cardId);
         this.updateCardsContainer();
+        console.log(this.cards)
     };
     updateCardsContainer() {
         this.containerSelector.innerHTML = '';
         this.cards.forEach(card => {
-            this.containerSelector.append(card.getAsHtml());
+            this.containerSelector.append(card.getAsHtml( () => { this.remove(card.id) }));
         });
+        localStorage.setItem(localStorageName, JSON.stringify(this.cards));
     };
-    cardsToObjects() {        
+    cardsToObjects() {
         let cardsArray = JSON.parse(localStorage.getItem(localStorageName));
         if (cardsArray) {
             cardsArray.forEach( item => {
                 this.cards.push(new Card(item));
-            }).bind(this);
+            });
         }
     };
     isCardNumberUnicue(cardNumber) {

@@ -15,24 +15,36 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var _default =
 /*#__PURE__*/
 function () {
-  function _default(number, comment, brandImageUrl) {
+  function _default(_ref) {
+    var number = _ref.number,
+        comment = _ref.comment,
+        brandImageUrl = _ref.brandImageUrl;
+
     _classCallCheck(this, _default);
 
     this.id = "card".concat(number.replace(' ', ''));
     this.number = number;
     this.comment = comment;
-    this.imageBrandUrl = brandImageUrl;
+    this.brandImageUrl = brandImageUrl;
   }
 
   _createClass(_default, [{
     key: "getAsHtml",
-    value: function getAsHtml() {
+    value: function getAsHtml(buttonHandler) {
       var card = document.createElement('div');
+      var button = document.createElement('button');
       card.setAttribute('class', 'list-card');
       card.setAttribute('id', this.id);
-      card.innerHTML = "<div class=\"list-card__comment\">".concat(this.comment, "</div>\n            <div class=\"list-card__number\">").concat(this.number, "</div>\n            <img src=\"").concat(this.imageBrandUrl, "\"/>");
+      card.innerHTML = "<div class=\"list-card__comment\">".concat(this.comment, "</div>\n            <div class=\"list-card__number\">").concat(this.number, "</div>\n            <img src=\"").concat(this.brandImageUrl, "\"/>");
+      button.setAttribute('type', 'button');
+      button.innerText = 'Remove';
+      button.onclick = buttonHandler;
+      card.append(button);
       return card;
     }
+  }, {
+    key: "removeButton",
+    value: function removeButton() {}
   }]);
 
   return _default;
@@ -48,7 +60,92 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _CardClass = _interopRequireDefault(require("./CardClass"));
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var cardInfoApiKey = 'b09f0613ed846051bfe94c7174ab16e8';
+var cardInfoApiUrl = 'https://api.cardinfo.online';
+var messages = {
+  cardNumberLength: 'Your card number should has 16 symbols',
+  cardNumberRequired: 'Card Number is required',
+  cardType: 'Your card must be only Visa or MasterCard',
+  cardCommentLength: 'Your comment should has maximum 1024 symbols',
+  cardIsalreadyExists: 'You are already has card with this number',
+  cardTypeRequestError: 'Card info request error'
+};
+
+var _default =
+/*#__PURE__*/
+function () {
+  function _default(formSelector, modal) {
+    _classCallCheck(this, _default);
+
+    this.formSelector = formSelector;
+    this.isPending = false;
+    this.hasErrors = false;
+    this.currentError = '';
+    this.modal = modal;
+  }
+
+  _createClass(_default, [{
+    key: "cardNumberLength",
+    value: function cardNumberLength(cardNumber) {
+      if (cardNumber.length !== 16) {
+        this.currentError = messages.cardNumberLength;
+        this.hasErrors = true;
+      } else {
+        this.currentError = '';
+        this.hasErrors = false;
+      }
+    }
+  }, {
+    key: "cardNumberRequired",
+    value: function cardNumberRequired(cardNumber) {
+      if (cardNumber) {
+        this.currentError = messages.cardNumberRequired;
+        this.hasErrors = true;
+      } else {
+        this.currentError = '';
+        this.hasErrors = false;
+      }
+    }
+  }, {
+    key: "cardType",
+    value: function cardType(cardNumber) {
+      var _this = this;
+
+      var firstSixCardNumbers = cardNumber.slice(0, 6);
+      var requestUrl = "".concat(cardInfoApiUrl, "?input=").concat(firstSixCardNumbers, "&apiKey=").concat(cardInfoApiKey);
+      this.isPending = true;
+      fetch(requestUrl).then(function (response) {
+        return response.json();
+      }).then(function (data) {
+        console.log(data);
+        _this.isPending = false;
+      })["catch"](function (error) {
+        console.error(error);
+        _this.isPending = false;
+      });
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+
+},{}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _Card = _interopRequireDefault(require("./Card"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -85,10 +182,13 @@ function () {
   }, {
     key: "remove",
     value: function remove(cardId) {
+      console.log(cardId);
+      console.log(this.cards);
       this.cards = this.cards.filter(function (item) {
-        return item.id == cardId;
+        return item.id === cardId;
       });
       this.updateCardsContainer();
+      console.log(this.cards);
     }
   }, {
     key: "updateCardsContainer",
@@ -97,8 +197,11 @@ function () {
 
       this.containerSelector.innerHTML = '';
       this.cards.forEach(function (card) {
-        _this.containerSelector.append(card.getAsHtml());
+        _this.containerSelector.append(card.getAsHtml(function () {
+          _this.remove(card.id);
+        }));
       });
+      localStorage.setItem(localStorageName, JSON.stringify(this.cards));
     }
   }, {
     key: "cardsToObjects",
@@ -109,8 +212,8 @@ function () {
 
       if (cardsArray) {
         cardsArray.forEach(function (item) {
-          _this2.cards.push(new _CardClass["default"](item));
-        }).bind(this);
+          _this2.cards.push(new _Card["default"](item));
+        });
       }
     }
   }, {
@@ -127,23 +230,84 @@ function () {
 
 exports["default"] = _default;
 
-},{"./CardClass":1}],3:[function(require,module,exports){
+},{"./Card":1}],4:[function(require,module,exports){
 "use strict";
 
-var _CardClass = _interopRequireDefault(require("./CardClass.js"));
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
 
-var _CardListClass = _interopRequireDefault(require("./CardListClass.js"));
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var _default =
+/*#__PURE__*/
+function () {
+  function _default(modalSelector) {
+    _classCallCheck(this, _default);
+
+    this.modalSelector = modalSelector;
+    this.showModal();
+    this.closeModalSelector = modalSelector.querySelector('.close');
+    this.addCloseButtonHandler();
+  }
+
+  _createClass(_default, [{
+    key: "showModal",
+    value: function showModal() {
+      this.modalSelector.classList.add('active');
+    }
+  }, {
+    key: "hideModal",
+    value: function hideModal() {
+      this.modalSelector.classList.remove('active');
+    }
+  }, {
+    key: "addCloseButtonHandler",
+    value: function addCloseButtonHandler() {
+      var _this = this;
+
+      this.closeModalSelector.onclick = function () {
+        _this.hideModal();
+      };
+    }
+  }]);
+
+  return _default;
+}();
+
+exports["default"] = _default;
+
+},{}],5:[function(require,module,exports){
+"use strict";
+
+var _CardList = _interopRequireDefault(require("./classes/CardList.js"));
+
+var _CardForm = _interopRequireDefault(require("./classes/CardForm.js"));
+
+var _Modal = _interopRequireDefault(require("./classes/Modal.js"));
+
+var _Card = _interopRequireDefault(require("./classes/Card"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var cardsContainer = document.getElementById('cardsContainer');
-var card = new _CardClass["default"]('22 22', 'lalal', 'images/970-250.jpg');
-var card2 = new _CardClass["default"]('22 232', 'lalal', 'images/970-250.jpg');
-var cardList = new _CardListClass["default"](cardsContainer);
-cardList.add(card);
-cardList.add(card2);
-console.log(cardList);
+var cardsContainerSelector = document.getElementById('cardsContainer');
+var cardFormSelector = document.getElementById('cardForm');
+var cardFormModalSelector = document.getElementById('cardFormModal');
+var cardFormModal = new _Modal["default"](cardFormModalSelector);
+var card = new _Card["default"]({
+  number: '4323 2314 3145 2155',
+  comment: 'test',
+  brandImageUrl: 'images/970-250.jpg'
+});
+var cardList = new _CardList["default"](cardsContainerSelector); //cardList.add(card);
 
-},{"./CardClass.js":1,"./CardListClass.js":2}]},{},[3])
+var cardForm = new _CardForm["default"](cardFormSelector);
+
+},{"./classes/Card":1,"./classes/CardForm.js":2,"./classes/CardList.js":3,"./classes/Modal.js":4}]},{},[5])
 
 //# sourceMappingURL=script.js.map

@@ -1,19 +1,31 @@
 export default class {
     constructor (modalSelector) {
         this.modalSelector = modalSelector;
-        this.showModal();
         this.closeModalSelector = modalSelector.querySelector('.close');
-        this.addCloseButtonHandler();
+        this.saveModalSelector = modalSelector.querySelector('.save');
+
+        this.closeButtonHandler(() => {
+            this.hide();
+        });
     };
-    showModal() {
+    show() {
         this.modalSelector.classList.add('active');
     };
-    hideModal() {
+    hide() {
         this.modalSelector.classList.remove('active');
     };
-    addCloseButtonHandler() {
-        this.closeModalSelector.onclick = () => {
-            this.hideModal();
-        };
+    disableButtons() {
+        this.closeModalSelector.setAttribute('disabled', 'disabled');
+        this.saveModalSelector.setAttribute('disabled', 'disabled');
     };
+    enableButtons() {
+        this.closeModalSelector.removeAttribute('disabled');
+        this.saveModalSelector.removeAttribute('disabled');
+    };
+    closeButtonHandler(cb) {
+        this.closeModalSelector.onclick = cb;
+    };
+    saveButtonHandler(cb) {
+        this.saveModalSelector.onclick = cb;
+    }
 }

@@ -1,34 +1,40 @@
 import Card from './Card';
 
+const emptyContainerText = 'Your card list is empty, try add new cards using \'Add\' button above';
 const localStorageName = 'cards-list';
 
 export default class {
-    constructor(containerSelector) {
+    constructor(containerSelector, deleteConfirmModal) {
         this.cards = [];
         this.containerSelector = containerSelector;
+        this.deleteConfirmModal = deleteConfirmModal;
+
         this.cardsToObjects();
         this.updateCardsContainer();
     };
     add(card) {
-        if (this.isCardNumberUnicue(card.number)) {
-            this.cards.push(card);
-            this.updateCardsContainer();
-        } else {
-            console.log('err')
-        }
+        this.cards.push(card);
+        this.updateCardsContainer();
     };
     remove(cardId) {
-        console.log(cardId);
-        console.log(this.cards)
-        this.cards = this.cards.filter(item => item.id === cardId);
+        this.cards = this.cards.filter(item => item.id !== cardId);
         this.updateCardsContainer();
-        console.log(this.cards)
     };
     updateCardsContainer() {
         this.containerSelector.innerHTML = '';
-        this.cards.forEach(card => {
-            this.containerSelector.append(card.getAsHtml( () => { this.remove(card.id) }));
-        });
+        if(this.cards.length > 0) {
+            this.cards.forEach(card => {
+                this.containerSelector.append(card.getAsHtml(() => { 
+                    this.deleteConfirmModal.show();
+                    this.deleteConfirmModal.saveButtonHandler(() => {
+                        this.remove(card.id);
+                        this.deleteConfirmModal.hide();
+                    })
+                }));
+            });
+        } else {
+            this.containerSelector.innerText = emptyContainerText; 
+        }
         localStorage.setItem(localStorageName, JSON.stringify(this.cards));
     };
     cardsToObjects() {
@@ -39,7 +45,4 @@ export default class {
             });
         }
     };
-    isCardNumberUnicue(cardNumber) {
-        return !this.cards.find(card => card.number === cardNumber);
-    }
 }

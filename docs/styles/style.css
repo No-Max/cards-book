@@ -54,7 +54,8 @@ button {
 
 .cards-container {
   padding: 10px 0;
-  text-align: center; }
+  text-align: center;
+  color: #fff; }
 
 .list-card {
   display: inline-block;
@@ -65,7 +66,8 @@ button {
   border-radius: 10px;
   transition: 0.15s;
   background-color: #91a29e;
-  position: relative; }
+  position: relative;
+  color: #000; }
   .list-card:hover {
     transform: scale(1.02); }
   .list-card img {

@@ -13,22 +13,36 @@
 
   <div class="wrapper">
     <div class="add-card">
-      <button>Add</button>
+      <button type="button" id="addCard">Add card </button>
     </div>
 
     <div class="cards-container" id="cardsContainer"></div>
 
-    <div class="card-form-modal" id="cardFormModal">
-      <form class="card-form" id="cardForm">
-        <input type="text" class="card-form__number">
-        <input type="text" class="card-form__comment">
-        <img src="">
-        <div class="card-form__buttons">
+    <div class="modal" id="cardModal">
+      <div class="modal__container">
+        <div class="modal__header">Create your card</div>
+        
+        <input type="number" class="card__number card-number" placeholder="Your card number (required)">
+        <div class="card__error card-number-error"></div>
+        
+        <textarea class="card__comment card-comment" placeholder="Your comment (optional)"></textarea>
+        <div class="card__error card-comment-error"></div>
+        
+        <div class="modal__buttons">
           <button type="button" class="close">Close</button>
-          <button type="submit">Save</button>
+          <button type="button" class="save">Save</button>
         </div>
-        <div class="card-form__error"></div>
-      </form>
+      </div>
+    </div>
+
+    <div class="modal" id="deleteConfirmModal">
+      <div class="modal__container">
+        <div class="modal__body">Please, confirm your remove</div>
+        <div class="modal__buttons">
+          <button type="button" class="close">Close</button>
+          <button type="button" class="save">Ok</button>
+        </div>
+      </div>
     </div>
   </div>
 

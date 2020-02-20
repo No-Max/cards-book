@@ -8,7 +8,8 @@ const deleteConfirmModal = new Modal(document.getElementById('deleteConfirmModal
 
 const cardList = new CardList(document.getElementById('cardsContainer'), deleteConfirmModal);
 
-new CardForm({
+new CardForm(
+    {
         numberInput: document.querySelector('.card-number'),
         numberError: document.querySelector('.card-number-error'),
         commentInput: document.querySelector('.card-comment'),

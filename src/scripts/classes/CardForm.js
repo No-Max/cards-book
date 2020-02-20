@@ -39,7 +39,7 @@ export default class {
         }
     };
     cardNumberLength(cb) {
-        if(this.cardNumber.replace(' ', '').length !== 16) {
+        if(cardHelper.removeSpaces(this.cardNumber).length !== 16) {
             cb(messages.cardNumberLength);
         } else {
             this.cardIsAlreadyExists(cb);

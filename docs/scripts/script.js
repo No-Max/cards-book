@@ -116,7 +116,7 @@ function () {
   }, {
     key: "cardNumberLength",
     value: function cardNumberLength(cb) {
-      if (this.cardNumber.replace(' ', '').length !== 16) {
+      if (_card["default"].removeSpaces(this.cardNumber).length !== 16) {
         cb(messages.cardNumberLength);
       } else {
         this.cardIsAlreadyExists(cb);

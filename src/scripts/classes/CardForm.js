@@ -1,54 +1,139 @@
+import Card from './Card.js'
+import cardHelper from '../helpers/card.js';
+
 const cardInfoApiKey = 'b09f0613ed846051bfe94c7174ab16e8';
 const cardInfoApiUrl = 'https://api.cardinfo.online';
 
 const messages = {
-    cardNumberLength: 'Your card number should has 16 symbols',
     cardNumberRequired: 'Card Number is required',
+    cardNumberLength: 'Your card number should has 16 symbols',
     cardType: 'Your card must be only Visa or MasterCard',
+    cardTypeApiRequest: 'Error in API request for card number validation',
+    cardIsAlreadyExists: 'You already has card with this number',
     cardCommentLength: 'Your comment should has maximum 1024 symbols',
-    cardIsalreadyExists: 'You are already has card with this number',
-    cardTypeRequestError: 'Card info request error'
 };
 
 export default class {
-    constructor(formSelector, modal) {
-        this.formSelector = formSelector;
-        this.isPending = false;
+    constructor(selectors, cardModal, cardList) {
+        this.selectors = selectors;
         this.hasErrors = false;
-        this.currentError = '';
-        this.modal = modal;
+        this.numberError = '';
+        this.commentError = '';
+        this.cardModal = cardModal;
+        this.cardList = cardList;
+
+        this.cardLogoImage = '';
+        this.cardNumber = '';
+        this.cardComment = '';
+
+        this.handleCardNumberInput();
+        this.handleCardCommentInput();
+        this.handleCreateCardButton();
+        this.handleOpenModal();
     };
-    cardNumberLength(cardNumber) {
-        if(cardNumber.length !== 16){
-            this.currentError = messages.cardNumberLength;
-            this.hasErrors = true;
+    cardNumberRequired(cb) {
+        if(!this.cardNumber) {
+            cb(messages.cardNumberRequired);
         } else {
-            this.currentError = '';
-            this.hasErrors = false;
+            this.cardNumberLength(cb);
         }
     };
-    cardNumberRequired(cardNumber) {
-        if(cardNumber) {
-            this.currentError = messages.cardNumberRequired;
-            this.hasErrors = true;
+    cardNumberLength(cb) {
+        if(this.cardNumber.replace(' ', '').length !== 16) {
+            cb(messages.cardNumberLength);
         } else {
-            this.currentError = '';
-            this.hasErrors = false;
+            this.cardIsAlreadyExists(cb);
         }
     };
-    cardType(cardNumber) {
-        const firstSixCardNumbers = cardNumber.slice(0, 6);
-        const requestUrl = `${cardInfoApiUrl}?input=${firstSixCardNumbers}&apiKey=${cardInfoApiKey}`
-        this.isPending = true;
-        fetch(requestUrl)
-            .then((response) => {
-                return response.json()
-            }).then((data) => {
-                console.log(data);
-                this.isPending = false;
-            }).catch((error) => {
-                console.error(error);
-                this.isPending = false;
-            })
+    cardIsAlreadyExists(cb) {
+        if(!!this.cardList.cards.find(item => item.number === this.cardNumber)){
+            cb(messages.cardIsAlreadyExists);
+        } else {
+            this.cardType(cb);
+        }      
+    };
+    cardType(cb) {
+        const requestUrl = `${cardInfoApiUrl}?input=${cardHelper.getFirstSixNumbers(this.cardNumber)}&apiKey=${cardInfoApiKey}`;
+        fetch(requestUrl).then((response) => response.json())
+        .then((data) => {
+            if((data.brandAlias === 'mastercard') || (data.brandAlias === 'visa')) {                
+                cb();
+                this.cardLogoImage = data.brandLogoOriginalPng;
+            } else {
+                cb(messages.cardType);
+            }
+        }).catch(() => {
+            cb(messages.cardTypeApiRequest);
+        })
+    };
+    cardCommentLength(cb) {
+        if(this.cardComment.length > 1024) {
+            cb(messages.cardCommentLength);
+        } else {
+            cb();
+        };
+    };
+    validateNumber(cb) {
+        this.cardNumberRequired((message) => {
+            if(message) {
+                this.hasErrors = true;
+                this.selectors.numberError.innerText = message;
+            } else {
+                this.hasErrors = false;
+                this.selectors.numberError.innerText = '';
+                if(cb) cb();
+            }
+        })
+    };
+    validateComment() {
+        this.cardCommentLength((message) => {
+            if(message) {
+                this.hasErrors = true;
+                this.selectors.commentError.innerText = message;
+            } else {
+                this.hasErrors = false;
+                this.selectors.commentError.innerText = '';
+            }
+        })
+    };
+    handleCardNumberInput() {
+        this.selectors.numberInput.onchange = (e) => {
+            const number = e.target.value;
+            this.cardNumber = number;
+            this.validateNumber();
+        };
+    };
+    handleCardCommentInput() {
+        this.selectors.commentInput.onchange = (e) => {
+            const comment = e.target.value;
+            this.cardComment = comment;
+            this.validateComment();
+        };       
+    };
+    handleCreateCardButton () {
+        this.cardModal.saveButtonHandler(() => {
+            this.validateNumber(() => {
+                const card = new Card({
+                    number: this.cardNumber,
+                    comment: this.cardComment,
+                    brandImageUrl: this.cardLogoImage
+                });
+                this.cardList.add(card);
+                this.cardModal.hide();
+                this.clear();
+            });
+        });
+    };
+    handleOpenModal() {
+        this.selectors.addCardButton.onclick = () => {
+            this.cardModal.show();
+        }
+    };
+    clear() {
+        this.cardNumber = '';
+        this.cardComment = '';
+        this.cardLogoImage = '';
+        this.selectors.commentInput.value = '';
+        this.selectors.numberInput.value = '';
     };
 }

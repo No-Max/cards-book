@@ -6,6 +6,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
+var _card = _interopRequireDefault(require("../helpers/card.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -22,7 +26,7 @@ function () {
 
     _classCallCheck(this, _default);
 
-    this.id = "card".concat(number.replace(' ', ''));
+    this.id = "card".concat(_card["default"].removeSpaces(number));
     this.number = number;
     this.comment = comment;
     this.brandImageUrl = brandImageUrl;
@@ -34,17 +38,13 @@ function () {
       var card = document.createElement('div');
       var button = document.createElement('button');
       card.setAttribute('class', 'list-card');
-      card.setAttribute('id', this.id);
-      card.innerHTML = "<div class=\"list-card__comment\">".concat(this.comment, "</div>\n            <div class=\"list-card__number\">").concat(this.number, "</div>\n            <img src=\"").concat(this.brandImageUrl, "\"/>");
+      card.innerHTML = "\n            <div class=\"list-card__comment\">".concat(this.comment, "</div>\n            <div class=\"list-card__number\">").concat(_card["default"].splitByFourNumbers(this.number), "</div>\n            <img src=\"").concat(this.brandImageUrl, "\"/>");
       button.setAttribute('type', 'button');
       button.innerText = 'Remove';
       button.onclick = buttonHandler;
       card.append(button);
       return card;
     }
-  }, {
-    key: "removeButton",
-    value: function removeButton() {}
   }]);
 
   return _default;
@@ -52,13 +52,19 @@ function () {
 
 exports["default"] = _default;
 
-},{}],2:[function(require,module,exports){
+},{"../helpers/card.js":5}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports["default"] = void 0;
+
+var _Card = _interopRequireDefault(require("./Card.js"));
+
+var _card = _interopRequireDefault(require("../helpers/card.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -69,66 +75,189 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var cardInfoApiKey = 'b09f0613ed846051bfe94c7174ab16e8';
 var cardInfoApiUrl = 'https://api.cardinfo.online';
 var messages = {
-  cardNumberLength: 'Your card number should has 16 symbols',
   cardNumberRequired: 'Card Number is required',
+  cardNumberLength: 'Your card number should has 16 symbols',
   cardType: 'Your card must be only Visa or MasterCard',
-  cardCommentLength: 'Your comment should has maximum 1024 symbols',
-  cardIsalreadyExists: 'You are already has card with this number',
-  cardTypeRequestError: 'Card info request error'
+  cardTypeApiRequest: 'Error in API request for card number validation',
+  cardIsAlreadyExists: 'You already has card with this number',
+  cardCommentLength: 'Your comment should has maximum 1024 symbols'
 };
 
 var _default =
 /*#__PURE__*/
 function () {
-  function _default(formSelector, modal) {
+  function _default(selectors, cardModal, cardList) {
     _classCallCheck(this, _default);
 
-    this.formSelector = formSelector;
-    this.isPending = false;
+    this.selectors = selectors;
     this.hasErrors = false;
-    this.currentError = '';
-    this.modal = modal;
+    this.numberError = '';
+    this.commentError = '';
+    this.cardModal = cardModal;
+    this.cardList = cardList;
+    this.cardLogoImage = '';
+    this.cardNumber = '';
+    this.cardComment = '';
+    this.handleCardNumberInput();
+    this.handleCardCommentInput();
+    this.handleCreateCardButton();
+    this.handleOpenModal();
   }
 
   _createClass(_default, [{
-    key: "cardNumberLength",
-    value: function cardNumberLength(cardNumber) {
-      if (cardNumber.length !== 16) {
-        this.currentError = messages.cardNumberLength;
-        this.hasErrors = true;
+    key: "cardNumberRequired",
+    value: function cardNumberRequired(cb) {
+      if (!this.cardNumber) {
+        cb(messages.cardNumberRequired);
       } else {
-        this.currentError = '';
-        this.hasErrors = false;
+        this.cardNumberLength(cb);
       }
     }
   }, {
-    key: "cardNumberRequired",
-    value: function cardNumberRequired(cardNumber) {
-      if (cardNumber) {
-        this.currentError = messages.cardNumberRequired;
-        this.hasErrors = true;
+    key: "cardNumberLength",
+    value: function cardNumberLength(cb) {
+      if (this.cardNumber.replace(' ', '').length !== 16) {
+        cb(messages.cardNumberLength);
       } else {
-        this.currentError = '';
-        this.hasErrors = false;
+        this.cardIsAlreadyExists(cb);
+      }
+    }
+  }, {
+    key: "cardIsAlreadyExists",
+    value: function cardIsAlreadyExists(cb) {
+      var _this = this;
+
+      if (!!this.cardList.cards.find(function (item) {
+        return item.number === _this.cardNumber;
+      })) {
+        cb(messages.cardIsAlreadyExists);
+      } else {
+        this.cardType(cb);
       }
     }
   }, {
     key: "cardType",
-    value: function cardType(cardNumber) {
-      var _this = this;
+    value: function cardType(cb) {
+      var _this2 = this;
 
-      var firstSixCardNumbers = cardNumber.slice(0, 6);
-      var requestUrl = "".concat(cardInfoApiUrl, "?input=").concat(firstSixCardNumbers, "&apiKey=").concat(cardInfoApiKey);
-      this.isPending = true;
+      var requestUrl = "".concat(cardInfoApiUrl, "?input=").concat(_card["default"].getFirstSixNumbers(this.cardNumber), "&apiKey=").concat(cardInfoApiKey);
       fetch(requestUrl).then(function (response) {
         return response.json();
       }).then(function (data) {
-        console.log(data);
-        _this.isPending = false;
-      })["catch"](function (error) {
-        console.error(error);
-        _this.isPending = false;
+        if (data.brandAlias === 'mastercard' || data.brandAlias === 'visa') {
+          cb();
+          _this2.cardLogoImage = data.brandLogoOriginalPng;
+        } else {
+          cb(messages.cardType);
+        }
+      })["catch"](function () {
+        cb(messages.cardTypeApiRequest);
       });
+    }
+  }, {
+    key: "cardCommentLength",
+    value: function cardCommentLength(cb) {
+      if (this.cardComment.length > 1024) {
+        cb(messages.cardCommentLength);
+      } else {
+        cb();
+      }
+
+      ;
+    }
+  }, {
+    key: "validateNumber",
+    value: function validateNumber(cb) {
+      var _this3 = this;
+
+      this.cardNumberRequired(function (message) {
+        if (message) {
+          _this3.hasErrors = true;
+          _this3.selectors.numberError.innerText = message;
+        } else {
+          _this3.hasErrors = false;
+          _this3.selectors.numberError.innerText = '';
+          if (cb) cb();
+        }
+      });
+    }
+  }, {
+    key: "validateComment",
+    value: function validateComment() {
+      var _this4 = this;
+
+      this.cardCommentLength(function (message) {
+        if (message) {
+          _this4.hasErrors = true;
+          _this4.selectors.commentError.innerText = message;
+        } else {
+          _this4.hasErrors = false;
+          _this4.selectors.commentError.innerText = '';
+        }
+      });
+    }
+  }, {
+    key: "handleCardNumberInput",
+    value: function handleCardNumberInput() {
+      var _this5 = this;
+
+      this.selectors.numberInput.onchange = function (e) {
+        var number = e.target.value;
+        _this5.cardNumber = number;
+
+        _this5.validateNumber();
+      };
+    }
+  }, {
+    key: "handleCardCommentInput",
+    value: function handleCardCommentInput() {
+      var _this6 = this;
+
+      this.selectors.commentInput.onchange = function (e) {
+        var comment = e.target.value;
+        _this6.cardComment = comment;
+
+        _this6.validateComment();
+      };
+    }
+  }, {
+    key: "handleCreateCardButton",
+    value: function handleCreateCardButton() {
+      var _this7 = this;
+
+      this.cardModal.saveButtonHandler(function () {
+        _this7.validateNumber(function () {
+          var card = new _Card["default"]({
+            number: _this7.cardNumber,
+            comment: _this7.cardComment,
+            brandImageUrl: _this7.cardLogoImage
+          });
+
+          _this7.cardList.add(card);
+
+          _this7.cardModal.hide();
+
+          _this7.clear();
+        });
+      });
+    }
+  }, {
+    key: "handleOpenModal",
+    value: function handleOpenModal() {
+      var _this8 = this;
+
+      this.selectors.addCardButton.onclick = function () {
+        _this8.cardModal.show();
+      };
+    }
+  }, {
+    key: "clear",
+    value: function clear() {
+      this.cardNumber = '';
+      this.cardComment = '';
+      this.cardLogoImage = '';
+      this.selectors.commentInput.value = '';
+      this.selectors.numberInput.value = '';
     }
   }]);
 
@@ -137,7 +266,7 @@ function () {
 
 exports["default"] = _default;
 
-},{}],3:[function(require,module,exports){
+},{"../helpers/card.js":5,"./Card.js":1}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -155,16 +284,18 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+var emptyContainerText = 'Your card list is empty, try add new cards using \'Add\' button above';
 var localStorageName = 'cards-list';
 
 var _default =
 /*#__PURE__*/
 function () {
-  function _default(containerSelector) {
+  function _default(containerSelector, deleteConfirmModal) {
     _classCallCheck(this, _default);
 
     this.cards = [];
     this.containerSelector = containerSelector;
+    this.deleteConfirmModal = deleteConfirmModal;
     this.cardsToObjects();
     this.updateCardsContainer();
   }
@@ -172,23 +303,16 @@ function () {
   _createClass(_default, [{
     key: "add",
     value: function add(card) {
-      if (this.isCardNumberUnicue(card.number)) {
-        this.cards.push(card);
-        this.updateCardsContainer();
-      } else {
-        console.log('err');
-      }
+      this.cards.push(card);
+      this.updateCardsContainer();
     }
   }, {
     key: "remove",
     value: function remove(cardId) {
-      console.log(cardId);
-      console.log(this.cards);
       this.cards = this.cards.filter(function (item) {
-        return item.id === cardId;
+        return item.id !== cardId;
       });
       this.updateCardsContainer();
-      console.log(this.cards);
     }
   }, {
     key: "updateCardsContainer",
@@ -196,11 +320,23 @@ function () {
       var _this = this;
 
       this.containerSelector.innerHTML = '';
-      this.cards.forEach(function (card) {
-        _this.containerSelector.append(card.getAsHtml(function () {
-          _this.remove(card.id);
-        }));
-      });
+
+      if (this.cards.length > 0) {
+        this.cards.forEach(function (card) {
+          _this.containerSelector.append(card.getAsHtml(function () {
+            _this.deleteConfirmModal.show();
+
+            _this.deleteConfirmModal.saveButtonHandler(function () {
+              _this.remove(card.id);
+
+              _this.deleteConfirmModal.hide();
+            });
+          }));
+        });
+      } else {
+        this.containerSelector.innerText = emptyContainerText;
+      }
+
       localStorage.setItem(localStorageName, JSON.stringify(this.cards));
     }
   }, {
@@ -215,13 +351,6 @@ function () {
           _this2.cards.push(new _Card["default"](item));
         });
       }
-    }
-  }, {
-    key: "isCardNumberUnicue",
-    value: function isCardNumberUnicue(cardNumber) {
-      return !this.cards.find(function (card) {
-        return card.number === cardNumber;
-      });
     }
   }]);
 
@@ -248,32 +377,49 @@ var _default =
 /*#__PURE__*/
 function () {
   function _default(modalSelector) {
+    var _this = this;
+
     _classCallCheck(this, _default);
 
     this.modalSelector = modalSelector;
-    this.showModal();
     this.closeModalSelector = modalSelector.querySelector('.close');
-    this.addCloseButtonHandler();
+    this.saveModalSelector = modalSelector.querySelector('.save');
+    this.closeButtonHandler(function () {
+      _this.hide();
+    });
   }
 
   _createClass(_default, [{
-    key: "showModal",
-    value: function showModal() {
+    key: "show",
+    value: function show() {
       this.modalSelector.classList.add('active');
     }
   }, {
-    key: "hideModal",
-    value: function hideModal() {
+    key: "hide",
+    value: function hide() {
       this.modalSelector.classList.remove('active');
     }
   }, {
-    key: "addCloseButtonHandler",
-    value: function addCloseButtonHandler() {
-      var _this = this;
-
-      this.closeModalSelector.onclick = function () {
-        _this.hideModal();
-      };
+    key: "disableButtons",
+    value: function disableButtons() {
+      this.closeModalSelector.setAttribute('disabled', 'disabled');
+      this.saveModalSelector.setAttribute('disabled', 'disabled');
+    }
+  }, {
+    key: "enableButtons",
+    value: function enableButtons() {
+      this.closeModalSelector.removeAttribute('disabled');
+      this.saveModalSelector.removeAttribute('disabled');
+    }
+  }, {
+    key: "closeButtonHandler",
+    value: function closeButtonHandler(cb) {
+      this.closeModalSelector.onclick = cb;
+    }
+  }, {
+    key: "saveButtonHandler",
+    value: function saveButtonHandler(cb) {
+      this.saveModalSelector.onclick = cb;
     }
   }]);
 
@@ -285,29 +431,45 @@ exports["default"] = _default;
 },{}],5:[function(require,module,exports){
 "use strict";
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+var _default = {
+  splitByFourNumbers: function splitByFourNumbers(number) {
+    return "".concat(number.slice(0, 4), " ").concat(number.slice(4, 8), " ").concat(number.slice(8, 12), " ").concat(number.slice(12, 16));
+  },
+  getFirstSixNumbers: function getFirstSixNumbers(number) {
+    return number.replace(/\s/g, "").slice(0, 6);
+  },
+  removeSpaces: function removeSpaces(number) {
+    return number.replace(/\s/g, "");
+  }
+};
+exports["default"] = _default;
+
+},{}],6:[function(require,module,exports){
+"use strict";
+
 var _CardList = _interopRequireDefault(require("./classes/CardList.js"));
 
 var _CardForm = _interopRequireDefault(require("./classes/CardForm.js"));
 
 var _Modal = _interopRequireDefault(require("./classes/Modal.js"));
 
-var _Card = _interopRequireDefault(require("./classes/Card"));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var cardsContainerSelector = document.getElementById('cardsContainer');
-var cardFormSelector = document.getElementById('cardForm');
-var cardFormModalSelector = document.getElementById('cardFormModal');
-var cardFormModal = new _Modal["default"](cardFormModalSelector);
-var card = new _Card["default"]({
-  number: '4323 2314 3145 2155',
-  comment: 'test',
-  brandImageUrl: 'images/970-250.jpg'
-});
-var cardList = new _CardList["default"](cardsContainerSelector); //cardList.add(card);
+var cardModal = new _Modal["default"](document.getElementById('cardModal'));
+var deleteConfirmModal = new _Modal["default"](document.getElementById('deleteConfirmModal'));
+var cardList = new _CardList["default"](document.getElementById('cardsContainer'), deleteConfirmModal);
+new _CardForm["default"]({
+  numberInput: document.querySelector('.card-number'),
+  numberError: document.querySelector('.card-number-error'),
+  commentInput: document.querySelector('.card-comment'),
+  commentError: document.querySelector('.card-comment-error'),
+  addCardButton: document.getElementById('addCard')
+}, cardModal, cardList);
 
-var cardForm = new _CardForm["default"](cardFormSelector);
-
-},{"./classes/Card":1,"./classes/CardForm.js":2,"./classes/CardList.js":3,"./classes/Modal.js":4}]},{},[5])
+},{"./classes/CardForm.js":2,"./classes/CardList.js":3,"./classes/Modal.js":4}]},{},[6])
 
 //# sourceMappingURL=script.js.map

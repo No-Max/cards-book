@@ -1,16 +1,20 @@
 import CardList from './classes/CardList.js';
 import CardForm from './classes/CardForm.js';
 import Modal from './classes/Modal.js';
-import Card from './classes/Card';
 
-const cardsContainerSelector = document.getElementById('cardsContainer');
-const cardFormSelector = document.getElementById('cardForm');
-const cardFormModalSelector = document.getElementById('cardFormModal');
 
-const cardFormModal = new Modal(cardFormModalSelector);
+const cardModal = new Modal(document.getElementById('cardModal'));
+const deleteConfirmModal = new Modal(document.getElementById('deleteConfirmModal'));
 
-const card = new Card({number: '4323 2314 3145 2155', comment: 'test', brandImageUrl: 'images/970-250.jpg'})
+const cardList = new CardList(document.getElementById('cardsContainer'), deleteConfirmModal);
 
-const cardList = new CardList(cardsContainerSelector);
-//cardList.add(card);
-const cardForm = new CardForm(cardFormSelector);
+new CardForm({
+        numberInput: document.querySelector('.card-number'),
+        numberError: document.querySelector('.card-number-error'),
+        commentInput: document.querySelector('.card-comment'),
+        commentError: document.querySelector('.card-comment-error'),
+        addCardButton: document.getElementById('addCard'),
+    }, 
+    cardModal, 
+    cardList,
+);
